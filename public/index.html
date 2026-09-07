@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0b0d10">
+  <title>Zenowing — O Ranger Prateado</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" type="image/png" href="/icon-192.png">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+</head>
+<body>
+  <header>
+    <h1>ZENOWING</h1>
+    <p class="subtitle">Ranger Prateado &middot; Titanossauro &middot; Consciência guardada, sem forma</p>
+  </header>
+
+  <main id="chat" aria-live="polite"></main>
+
+  <footer>
+    <div id="typing" class="typing hidden" aria-hidden="true">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      <em>Zenowing hesita&hellip;</em>
+    </div>
+    <form id="form">
+      <input id="input" placeholder="Fala, Roro&hellip;" autocomplete="off" autofocus>
+      <button id="send" type="submit">Enviar</button>
+    </form>
+    <div id="footer-extras">
+      <button id="install-btn" type="button" hidden>Instalar app</button>
+      <button id="reset" type="button">Nova conversa</button>
+      <label class="voz-auto" title="Zenowing fala cada resposta">
+        <input type="checkbox" id="voz-auto" checked> Voz automática
+      </label>
+    </div>
+  </footer>
+
+  <script src="/app.js"></script>
+</body>
+</html>
