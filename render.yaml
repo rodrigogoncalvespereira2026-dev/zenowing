@@ -1,0 +1,24 @@
+# Blueprint do Render — cria o serviço automaticamente com este ficheiro.
+# As variáveis com `sync: false` são pedidas no painel no momento do deploy
+# (nunca guardes chaves neste ficheiro).
+
+services:
+  - type: web
+    name: zenowing
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python server.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      - key: AI_BASE_URL
+        sync: false
+      - key: AI_MODEL
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_TEMPERATURE
+        value: "0.8"
+      - key: TTS_VOICE
+        value: "pt-PT-DuarteNeural"
