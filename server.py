@@ -16,6 +16,15 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 PUBLIC = ROOT / "public"
 SYSTEM_PROMPT = (ROOT / "zenowing.md").read_text(encoding="utf-8")
+LORE_COMUM = ROOT.parent / "lore-comum.md"
+
+
+def carregar_lore_comum() -> str:
+    """Lore comum do universo, partilhado com os outros personagens (pasta-mãe)."""
+    try:
+        return LORE_COMUM.read_text(encoding="utf-8")
+    except OSError:
+        return ""
 MAX_HISTORY = 40
 DEFAULT_API_URL = "https://api.openai.com/v1/chat/completions"
 
@@ -237,7 +246,10 @@ class Handler(BaseHTTPRequestHandler):
             and isinstance(m.get("content"), str)
             and m["content"].strip()
         ][-MAX_HISTORY:]
-        messages = [{"role": "system", "content": SYSTEM_PROMPT}, *clean]
+        # Prompt próprio do Zenowing + lore comum do universo (pasta-mãe).
+        lore = carregar_lore_comum()
+        system_text = SYSTEM_PROMPT + (("\n\n---\n\n" + lore) if lore else "")
+        messages = [{"role": "system", "content": system_text}, *clean]
 
         if not any(m["role"] == "user" for m in messages):
             self._send_json(400, {"error": "Mensagem vazia."})
