@@ -2,43 +2,74 @@
 <html lang="pt-PT">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="color-scheme" content="dark">
-  <meta name="theme-color" content="#0b0d10">
+  <meta name="theme-color" content="#05070b">
   <title>Zenowing — O Ranger Prateado</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/style.css">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" type="image/png" href="/icon-192.png">
   <link rel="apple-touch-icon" href="/icon-192.png">
 </head>
 <body>
-  <header>
-    <h1>ZENOWING</h1>
-    <p class="subtitle">Ranger Prateado &middot; Titanossauro &middot; Consciência guardada, sem forma</p>
-  </header>
+  <div class="fx" aria-hidden="true">
+    <div class="fx-grid"></div>
+    <div class="fx-orb fx-orb--silver"></div>
+    <div class="fx-orb fx-orb--red"></div>
+    <div class="fx-scan"></div>
+  </div>
 
-  <main id="chat" aria-live="polite"></main>
+  <div class="app">
+    <header class="hero">
+      <div class="hero-kicker">
+        <span class="led" aria-hidden="true"></span>
+        Ranger Prateado &middot; Titanossauro
+      </div>
+      <h1 class="hero-title">ZENOWING</h1>
+      <p class="subtitle">Consciência guardada, sem forma</p>
+      <div class="hero-stats">
+        <span class="chip"><b>ESTADO</b> Corrente ativa</span>
+        <span class="chip"><b>VOZ</b> Sintetizada</span>
+      </div>
+      <span class="corner corner--tl" aria-hidden="true"></span>
+      <span class="corner corner--br" aria-hidden="true"></span>
+    </header>
 
-  <footer>
-    <div id="typing" class="typing hidden" aria-hidden="true">
-      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-      <em>Zenowing hesita&hellip;</em>
-    </div>
-    <form id="form">
-      <input id="input" placeholder="Fala, Roro&hellip;" autocomplete="off" autofocus>
-      <button id="send" type="submit">Enviar</button>
-    </form>
-    <div id="footer-extras">
-      <button id="install-btn" type="button" hidden>Instalar app</button>
-      <button id="reset" type="button">Nova conversa</button>
-      <label class="voz-auto" title="Zenowing fala cada resposta">
-        <input type="checkbox" id="voz-auto" checked> Voz automática
-      </label>
-    </div>
-  </footer>
+    <main id="chat" class="chat" aria-live="polite"></main>
+
+    <footer class="dock">
+      <div id="typing" class="typing hidden" aria-hidden="true">
+        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        <em>Zenowing hesita&hellip;</em>
+      </div>
+      <form id="form" class="composer">
+        <input id="input" placeholder="Fala, Roro&hellip;" autocomplete="off" autofocus aria-label="A tua mensagem">
+        <button id="send" type="submit">
+          <span>Enviar</span>
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M3 11.5 20.5 3 13 20.5l-2.6-6.4L3 11.5Z" fill="currentColor"/></svg>
+        </button>
+      </form>
+      <!-- Barra de ações: mesma ordem em todos os personagens -->
+      <nav class="acoes" aria-label="Ações">
+        <button id="voz-btn" class="acao" type="button" aria-pressed="true"
+                title="Zenowing lê cada resposta em voz alta">
+          <span id="voz-ic" class="ic" aria-hidden="true">🔊</span>
+          <span id="voz-txt">Voz ligada</span>
+        </button>
+        <button id="reset" class="acao" type="button">
+          <span class="ic" aria-hidden="true">✨</span>
+          Nova conversa
+        </button>
+        <button id="install-btn" class="acao" type="button" hidden>
+          <span class="ic" aria-hidden="true">📲</span>
+          Instalar app
+        </button>
+      </nav>
+    </footer>
+  </div>
 
   <script src="/app.js"></script>
 </body>

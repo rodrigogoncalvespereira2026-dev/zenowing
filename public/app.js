@@ -4,7 +4,9 @@ const input = document.getElementById("input");
 const sendBtn = document.getElementById("send");
 const resetBtn = document.getElementById("reset");
 const typingEl = document.getElementById("typing");
-const vozAutoEl = document.getElementById("voz-auto");
+const vozBtnEl = document.getElementById("voz-btn");
+const vozTxtEl = document.getElementById("voz-txt");
+const vozIcEl = document.getElementById("voz-ic");
 const installBtn = document.getElementById("install-btn");
 
 /* ── App instalável (PWA) ─────────────────────────────── */
@@ -41,68 +43,82 @@ const OPENING =
 let messages = [{ role: "assistant", content: OPENING }];
 let busy = false;
 
-/* ── Voz ──────────────────────────────────────────────── */
+/* ── Voz ────────────────────────────────────────────────
+   Mesmo sistema do Alpha: síntese de fala do próprio browser
+   (Web Speech API). Fala sozinho cada resposta, sem cliques.
 
-let currentAudio = null;
-const audioCache = new Map(); // texto -> objectURL
+   O browser só deixa sintetizar depois de um gesto do
+   utilizador: até lá a resposta fica em espera e sai no
+   primeiro toque.                                              */
+
 const VOZ_LABEL = "Ouvir voz";
+const synth = window.speechSynthesis;
+let vozLigada = true;
+let vozBloqueada = true;
+let vozPendente = null;
+let vozAtual = null;
 
-function stopVoice() {
-  if (currentAudio) {
-    currentAudio.pause();
-    currentAudio = null;
+function escolherVozPT() {
+  if (!synth) return null;
+  const vozes = synth.getVoices();
+  return (
+    vozes.find((v) => v.lang.includes("pt") && v.name.includes("Google")) ||
+    vozes.find((v) => v.lang.includes("pt")) ||
+    vozes.find((v) => v.lang.includes("es")) ||
+    null
+  );
+}
+
+function marcarBotao(btn, aFalar) {
+  if (!btn) return;
+  btn.classList.toggle("playing", aFalar);
+  btn.textContent = aFalar ? "Parar" : VOZ_LABEL;
+}
+
+function falar(texto, { btn = null, forcar = false } = {}) {
+  if (!synth || !texto) return;
+  if (!forcar && !vozLigada) return;
+  if (vozBloqueada) {
+    vozPendente = { texto, btn };
+    return;
   }
+  synth.cancel();
+  const voz = new SpeechSynthesisUtterance(texto);
+  voz.lang = "pt-PT";
+  voz.rate = 0.85;
+  voz.pitch = 1.1;
+  voz.volume = 1.0;
+  const escolhida = escolherVozPT();
+  if (escolhida) voz.voice = escolhida;
+  voz.onstart = () => marcarBotao(btn, true);
+  voz.onend = () => marcarBotao(btn, false);
+  voz.onerror = () => marcarBotao(btn, false);
+  vozAtual = voz;
+  synth.speak(voz);
+}
+
+function pararVoz() {
+  if (synth) synth.cancel();
+  vozPendente = null;
+  vozAtual = null;
   document.querySelectorAll(".voice-btn.playing").forEach((btn) => {
     btn.classList.remove("playing");
     btn.textContent = VOZ_LABEL;
   });
 }
 
-async function playVoice(text, btn) {
-  const wasPlaying = btn.classList.contains("playing");
-  stopVoice();
-  if (wasPlaying) return;
-
-  try {
-    btn.textContent = "A gerar voz…";
-    btn.disabled = true;
-    let url = audioCache.get(text);
-    if (!url) {
-      const res = await fetch("/api/tts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
-      });
-      if (!res.ok) {
-        let msg = "Erro " + res.status;
-        try {
-          const body = await res.json();
-          if (body.error) msg = body.error;
-        } catch {}
-        throw new Error(msg);
-      }
-      url = URL.createObjectURL(await res.blob());
-      audioCache.set(text, url);
-    }
-    const audio = new Audio(url);
-    currentAudio = audio;
-    window.currentAudio = audio;
-    audio.onended = () => {
-      if (currentAudio === audio) currentAudio = null;
-      btn.classList.remove("playing");
-      btn.textContent = VOZ_LABEL;
-    };
-    btn.classList.add("playing");
-    btn.textContent = "Parar";
-    btn.disabled = false;
-    await audio.play();
-  } catch (err) {
-    btn.classList.remove("playing");
-    btn.textContent = VOZ_LABEL;
-    btn.disabled = false;
-    btn.title = err.message;
-  }
+/** O primeiro gesto do utilizador é o que desbloqueia a síntese. */
+function desbloquearVoz() {
+  if (!vozBloqueada) return;
+  vozBloqueada = false;
+  const pendente = vozPendente;
+  vozPendente = null;
+  if (pendente) falar(pendente.texto, { btn: pendente.btn, forcar: true });
 }
+
+["pointerdown", "click", "keydown", "touchstart"].forEach((evento) => {
+  window.addEventListener(evento, desbloquearVoz, { once: true, passive: true });
+});
 
 function makeVoiceButton(text) {
   const btn = document.createElement("button");
@@ -110,12 +126,39 @@ function makeVoiceButton(text) {
   btn.className = "voice-btn";
   btn.textContent = VOZ_LABEL;
   btn.title = "Ouvir esta resposta";
-  btn.addEventListener("click", () => playVoice(text, btn));
+  btn.addEventListener("click", () => {
+    if (btn.classList.contains("playing")) {
+      pararVoz();
+      return;
+    }
+    desbloquearVoz();
+    falar(text, { btn, forcar: true });
+  });
   return btn;
 }
 
 function attachVoice(div, text) {
   div.appendChild(makeVoiceButton(text));
+}
+
+function atualizarBotaoVoz() {
+  vozBtnEl.setAttribute("aria-pressed", String(vozLigada));
+  vozTxtEl.textContent = vozLigada ? "Voz ligada" : "Voz desligada";
+  vozIcEl.textContent = vozLigada ? "🔊" : "🔇";
+}
+
+vozBtnEl.addEventListener("click", () => {
+  vozLigada = !vozLigada;
+  atualizarBotaoVoz();
+  if (!vozLigada) pararVoz();
+});
+
+atualizarBotaoVoz();
+
+// O Chrome carrega a lista de vozes de forma assíncrona: aquece-a já.
+if (synth) {
+  synth.addEventListener("voiceschanged", () => {});
+  synth.getVoices();
 }
 
 /* ── Chat ─────────────────────────────────────────────── */
@@ -161,7 +204,7 @@ form.addEventListener("submit", async (event) => {
   const text = input.value.trim();
   if (!text || busy) return;
   input.value = "";
-  stopVoice();
+  pararVoz();
 
   messages.push({ role: "user", content: text });
   addBubble("user").text.textContent = text;
@@ -207,7 +250,8 @@ form.addEventListener("submit", async (event) => {
     attachVoice(zenoDiv, reply);
     scrollDown();
 
-    if (vozAutoEl.checked) playVoice(reply, zenoDiv.querySelector(".voice-btn"));
+    // Fala sozinho, sem cliques (a caixa "Voz automática" é o interruptor).
+    falar(reply, { btn: zenoDiv.querySelector(".voice-btn") });
   } catch (err) {
     typingEl.classList.add("hidden");
     replyEl.classList.add("error");
@@ -221,7 +265,7 @@ form.addEventListener("submit", async (event) => {
 
 resetBtn.addEventListener("click", () => {
   if (busy) return;
-  stopVoice();
+  pararVoz();
   messages = [{ role: "assistant", content: OPENING }];
   renderHistory();
   input.focus();
