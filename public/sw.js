@@ -3,11 +3,12 @@
    offline. /api/* nunca é guardado em cache. Alterar CACHE_VERSION força a
    atualização de tudo. */
 
-const CACHE_VERSION = "zenowing-v1";
+const CACHE_VERSION = "zenowing-v2";
 const ASSETS = [
   "/",
   "/style.css",
   "/app.js",
+  "/cara.js",
   "/manifest.webmanifest",
   "/icon-192.png",
   "/icon-512.png",

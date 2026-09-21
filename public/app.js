@@ -90,9 +90,18 @@ function falar(texto, { btn = null, forcar = false } = {}) {
   voz.volume = 1.0;
   const escolhida = escolherVozPT();
   if (escolhida) voz.voice = escolhida;
-  voz.onstart = () => marcarBotao(btn, true);
-  voz.onend = () => marcarBotao(btn, false);
-  voz.onerror = () => marcarBotao(btn, false);
+  voz.onstart = () => {
+    marcarBotao(btn, true);
+    cara?.estado("falar");
+  };
+  voz.onend = () => {
+    marcarBotao(btn, false);
+    cara?.estado("espera");
+  };
+  voz.onerror = () => {
+    marcarBotao(btn, false);
+    cara?.estado("espera");
+  };
   vozAtual = voz;
   synth.speak(voz);
 }
@@ -101,6 +110,7 @@ function pararVoz() {
   if (synth) synth.cancel();
   vozPendente = null;
   vozAtual = null;
+  cara?.estado("espera");
   document.querySelectorAll(".voice-btn.playing").forEach((btn) => {
     btn.classList.remove("playing");
     btn.textContent = VOZ_LABEL;
@@ -161,6 +171,89 @@ if (synth) {
   synth.getVoices();
 }
 
+/* ── Cara ───────────────────────────────────────────────
+   A cara do Zenowing (cara.js), irmã da do Alpha: olha em
+   volta quando está parado, pensa enquanto espera e fala com
+   a boca enquanto a voz fala.                                */
+
+const cara = window.CaraPrimal
+  ? CaraPrimal.criar(document.getElementById("cara"), { variante: "zenowing" })
+  : null;
+
+/* ── Reações ────────────────────────────────────────────
+   Painel para escolher a expressão à mão, como o do Alpha:
+   cada azulejo é uma cara parada com a expressão já aplicada,
+   e tocar nele mostra-a na cara grande (a de cima).            */
+
+const ROTULOS = {
+  feliz: "Feliz!",
+  rir: "A rir!",
+  amor: "Amor!",
+  envergonhado: "Envergonhado...",
+  piscadela: "Piscadela ;)",
+  desconfiado: "Desconfiado...",
+  determinado: "Determinado!",
+  surpreso: "Surpreso!",
+  confuso: "Confuso...",
+  triste: "Triste...",
+  zangado: "Zangado!",
+  sono: "Com sono...",
+};
+
+const painelReacoes = document.getElementById("reacoes");
+const grelhaReacoes = document.getElementById("reacoes-grelha");
+const botaoReacoes = document.getElementById("reacoes-btn");
+const fecharReacoes = document.getElementById("reacoes-fechar");
+let grelhaFeita = false;
+
+function construirGrelha() {
+  if (grelhaFeita || !cara || !window.CaraPrimal) return;
+  grelhaFeita = true;
+  for (const nome of CaraPrimal.expressoes) {
+    const botao = document.createElement("button");
+    botao.type = "button";
+    botao.className = "reacao";
+    botao.title = nome;
+    botao.setAttribute("aria-pressed", "false");
+
+    const miniatura = document.createElement("canvas");
+    miniatura.width = 300;
+    miniatura.height = 280;
+    miniatura.setAttribute("aria-hidden", "true");
+    // Uma cara parada por azulejo: 12 a animar ao mesmo tempo seria demais.
+    CaraPrimal.criar(miniatura, { variante: "zenowing", estatico: nome, densidade: 1 });
+
+    const rotulo = document.createElement("span");
+    rotulo.textContent = ROTULOS[nome] || nome;
+
+    botao.append(miniatura, rotulo);
+    botao.addEventListener("click", () => escolherReacao(nome, botao));
+    grelhaReacoes.appendChild(botao);
+  }
+}
+
+function escolherReacao(nome, botao) {
+  cara?.expressao(nome, 3500);
+  for (const outro of grelhaReacoes.querySelectorAll(".reacao")) {
+    outro.setAttribute("aria-pressed", String(outro === botao));
+  }
+}
+
+function abrirReacoes(abrir) {
+  painelReacoes.hidden = !abrir;
+  botaoReacoes.setAttribute("aria-expanded", String(abrir));
+  if (abrir) construirGrelha();
+}
+
+botaoReacoes.addEventListener("click", () => abrirReacoes(painelReacoes.hidden));
+fecharReacoes.addEventListener("click", () => {
+  abrirReacoes(false);
+  botaoReacoes.focus();
+});
+document.addEventListener("keydown", (evento) => {
+  if (evento.key === "Escape" && !painelReacoes.hidden) abrirReacoes(false);
+});
+
 /* ── Chat ─────────────────────────────────────────────── */
 
 function scrollDown() {
@@ -210,6 +303,7 @@ form.addEventListener("submit", async (event) => {
   addBubble("user").text.textContent = text;
 
   setBusy(true);
+  cara?.estado("pensar");
   const { div: zenoDiv, text: replyEl } = addBubble("assistant");
   let reply = "";
   let started = false;
@@ -251,8 +345,11 @@ form.addEventListener("submit", async (event) => {
     scrollDown();
 
     // Fala sozinho, sem cliques (a caixa "Voz automática" é o interruptor).
+    cara?.estado("espera");
+    cara?.humor(reply);
     falar(reply, { btn: zenoDiv.querySelector(".voice-btn") });
   } catch (err) {
+    cara?.estado("espera");
     typingEl.classList.add("hidden");
     replyEl.classList.add("error");
     replyEl.textContent = err.message;
@@ -266,6 +363,7 @@ form.addEventListener("submit", async (event) => {
 resetBtn.addEventListener("click", () => {
   if (busy) return;
   pararVoz();
+  cara?.estado("espera");
   messages = [{ role: "assistant", content: OPENING }];
   renderHistory();
   input.focus();

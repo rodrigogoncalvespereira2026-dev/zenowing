@@ -24,15 +24,25 @@
 
   <div class="app">
     <header class="hero">
-      <div class="hero-kicker">
-        <span class="led" aria-hidden="true"></span>
-        Ranger Prateado &middot; Titanossauro
+      <div class="hero-text">
+        <div class="hero-kicker">
+          <span class="led" aria-hidden="true"></span>
+          Ranger Prateado &middot; Titanossauro
+        </div>
+        <h1 class="hero-title">ZENOWING</h1>
+        <p class="subtitle">Consciência guardada, sem forma</p>
+        <div class="hero-stats">
+          <span class="chip"><b>ESTADO</b> Corrente ativa</span>
+          <span class="chip"><b>VOZ</b> Sintetizada</span>
+        </div>
       </div>
-      <h1 class="hero-title">ZENOWING</h1>
-      <p class="subtitle">Consciência guardada, sem forma</p>
-      <div class="hero-stats">
-        <span class="chip"><b>ESTADO</b> Corrente ativa</span>
-        <span class="chip"><b>VOZ</b> Sintetizada</span>
+      <!-- Cara do Zenowing (cara.js) + o painel de reações -->
+      <div class="cara-bloco">
+        <canvas id="cara" class="cara" width="300" height="280" aria-hidden="true"></canvas>
+        <button id="reacoes-btn" class="acao" type="button" aria-expanded="false" aria-controls="reacoes">
+          <span class="ic" aria-hidden="true">🎭</span>
+          Reações
+        </button>
       </div>
       <span class="corner corner--tl" aria-hidden="true"></span>
       <span class="corner corner--br" aria-hidden="true"></span>
@@ -69,8 +79,19 @@
         </button>
       </nav>
     </footer>
+
+    <!-- Painel de reações: escolher a expressão da cara à mão -->
+    <section id="reacoes" class="reacoes" aria-label="Reações" hidden>
+      <div class="reacoes-topo">
+        <strong>REAÇÕES</strong>
+        <small>Toca numa para a veres na cara</small>
+        <button id="reacoes-fechar" class="reacoes-fechar" type="button" aria-label="Fechar reações">✕</button>
+      </div>
+      <div id="reacoes-grelha" class="reacoes-grelha"></div>
+    </section>
   </div>
 
+  <script src="/cara.js"></script>
   <script src="/app.js"></script>
 </body>
 </html>

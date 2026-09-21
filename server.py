@@ -180,6 +180,8 @@ class Handler(BaseHTTPRequestHandler):
             self._serve_file(PUBLIC / "style.css", "text/css; charset=utf-8")
         elif self.path == "/app.js":
             self._serve_file(PUBLIC / "app.js", "text/javascript; charset=utf-8")
+        elif self.path == "/cara.js":
+            self._serve_file(PUBLIC / "cara.js", "text/javascript; charset=utf-8")
         elif self.path == "/manifest.webmanifest":
             self._serve_file(PUBLIC / "manifest.webmanifest", "application/manifest+json")
         elif self.path == "/sw.js":
